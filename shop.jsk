@@ -1,0 +1,631 @@
+import { useState, useEffect, useCallback } from "react";
+
+const PRODUCTS = [
+  { id: 1, name: "Wireless Noise-Cancelling Headphones", price: 299, category: "Electronics", rating: 4.8, reviews: 2341, stock: 12, image: "🎧", badge: "Bestseller" },
+  { id: 2, name: "Ultralight Running Shoes", price: 129, category: "Footwear", rating: 4.6, reviews: 987, stock: 34, image: "👟", badge: "New" },
+  { id: 3, name: "Minimalist Leather Wallet", price: 59, category: "Accessories", rating: 4.9, reviews: 5621, stock: 88, image: "👜", badge: "Top Rated" },
+  { id: 4, name: "Smart Home Hub", price: 189, category: "Electronics", rating: 4.5, reviews: 1122, stock: 7, image: "🏠", badge: "Hot Deal" },
+  { id: 5, name: "Organic Cotton T-Shirt", price: 39, category: "Clothing", rating: 4.7, reviews: 3401, stock: 156, image: "👕", badge: "" },
+  { id: 6, name: "Stainless Steel Water Bottle", price: 45, category: "Lifestyle", rating: 4.8, reviews: 8012, stock: 63, image: "🍶", badge: "Eco Pick" },
+  { id: 7, name: "Mechanical Keyboard", price: 249, category: "Electronics", rating: 4.9, reviews: 4299, stock: 19, image: "⌨️", badge: "Bestseller" },
+  { id: 8, name: "Yoga Mat Premium", price: 79, category: "Fitness", rating: 4.6, reviews: 2180, stock: 41, image: "🧘", badge: "" },
+  { id: 9, name: "Ceramic Pour-Over Coffee Set", price: 95, category: "Kitchen", rating: 4.7, reviews: 1543, stock: 28, image: "☕", badge: "Staff Pick" },
+  { id: 10, name: "Polarized Sunglasses", price: 149, category: "Accessories", rating: 4.5, reviews: 768, stock: 55, image: "🕶️", badge: "New" },
+  { id: 11, name: "Standing Desk Converter", price: 399, category: "Furniture", rating: 4.4, reviews: 892, stock: 6, image: "🖥️", badge: "" },
+  { id: 12, name: "Hardcover Planner 2026", price: 29, category: "Lifestyle", rating: 4.8, reviews: 3320, stock: 200, image: "📓", badge: "" },
+];
+
+const CATEGORIES = ["All", "Electronics", "Footwear", "Accessories", "Clothing", "Lifestyle", "Fitness", "Kitchen", "Furniture"];
+
+const ORDERS = [
+  { id: "ORD-7821", date: "May 18, 2026", items: 3, total: 437, status: "Delivered", statusColor: "success" },
+  { id: "ORD-7654", date: "May 12, 2026", items: 1, total: 79, status: "In Transit", statusColor: "info" },
+  { id: "ORD-7423", date: "Apr 29, 2026", items: 2, total: 188, status: "Delivered", statusColor: "success" },
+];
+
+const COLORS = {
+  primary: "#1A1A2E",
+  accent: "#E94560",
+  teal: "#16C79A",
+  gold: "#F5A623",
+  bg: "#0F0F1A",
+  card: "#1A1A2E",
+  cardHover: "#22223A",
+  muted: "#8888AA",
+  text: "#F0F0FF",
+  border: "rgba(255,255,255,0.08)",
+};
+
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: #0F0F1A; color: #F0F0FF; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0F0F1A; }
+  ::-webkit-scrollbar-thumb { background: #333355; border-radius: 2px; }
+  .syne { font-family: 'Syne', sans-serif; }
+  .btn-accent { background: #E94560; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .btn-accent:hover { background: #FF6B87; transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: #F0F0FF; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 10px 20px; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.06); }
+  .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .badge-red { background: rgba(233,69,96,0.2); color: #E94560; }
+  .badge-teal { background: rgba(22,199,154,0.2); color: #16C79A; }
+  .badge-gold { background: rgba(245,166,35,0.2); color: #F5A623; }
+  .badge-blue { background: rgba(100,149,237,0.2); color: #6495ED; }
+  .star { color: #F5A623; font-size: 13px; }
+  input, select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #F0F0FF; border-radius: 8px; padding: 10px 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border 0.2s; }
+  input:focus, select:focus { border-color: #E94560; }
+  input::placeholder { color: #8888AA; }
+  select option { background: #1A1A2E; }
+  .card { background: #1A1A2E; border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; transition: all 0.25s; }
+  .card:hover { background: #22223A; border-color: rgba(255,255,255,0.12); transform: translateY(-2px); }
+  .chip { display: inline-block; padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.08); color: #8888AA; }
+  .chip.active { background: #E94560; color: #fff; border-color: #E94560; }
+  .chip:hover:not(.active) { border-color: rgba(255,255,255,0.2); color: #F0F0FF; }
+  .tab { padding: 10px 20px; border: none; background: transparent; color: #8888AA; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab.active { color: #E94560; border-bottom-color: #E94560; }
+  .progress-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #E94560, #F5A623); border-radius: 2px; transition: width 0.6s ease; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: #16C79A; color: #0F0F1A; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 1000; animation: slideUp 0.3s ease; pointer-events: none; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .ai-bubble { background: rgba(22,199,154,0.08); border: 1px solid rgba(22,199,154,0.2); border-radius: 12px; padding: 14px 16px; font-size: 14px; line-height: 1.6; color: #ccc; white-space: pre-wrap; }
+  .user-bubble { background: rgba(233,69,96,0.1); border: 1px solid rgba(233,69,96,0.2); border-radius: 12px; padding: 14px 16px; font-size: 14px; color: #F0F0FF; }
+  .qty-btn { width: 30px; height: 30px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: #F0F0FF; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+  .qty-btn:hover { background: rgba(255,255,255,0.08); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #16C79A; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; vertical-align: middle; margin-right: 8px; }
+`;
+
+function Stars({ rating }) {
+  return (
+    <span>
+      {[1,2,3,4,5].map(i => (
+        <span key={i} className="star" style={{ opacity: i <= Math.round(rating) ? 1 : 0.25 }}>★</span>
+      ))}
+    </span>
+  );
+}
+
+function getBadgeClass(badge) {
+  if (!badge) return "";
+  if (["Bestseller","Top Rated","Staff Pick"].includes(badge)) return "badge-gold";
+  if (["New","Hot Deal"].includes(badge)) return "badge-red";
+  if (["Eco Pick"].includes(badge)) return "badge-teal";
+  return "badge-blue";
+}
+
+export default function ShopNest() {
+  const [page, setPage] = useState("shop");
+  const [cart, setCart] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+  const [category, setCategory] = useState("All");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("featured");
+  const [toast, setToast] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [checkoutStep, setCheckoutStep] = useState(1);
+  const [aiMessages, setAiMessages] = useState([
+    { role: "assistant", text: "Hi! I'm your ShopNest AI assistant. Ask me anything — product advice, comparisons, gift ideas, or style help! 🛍️" }
+  ]);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [profileTab, setProfileTab] = useState("orders");
+
+  const showToast = useCallback((msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  }, []);
+
+  const addToCart = (product, qty = 1) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.id === product.id);
+      if (existing) return prev.map(i => i.id === product.id ? { ...i, qty: i.qty + qty } : i);
+      return [...prev, { ...product, qty }];
+    });
+    showToast(`${product.name} added to cart`);
+  };
+
+  const removeFromCart = (id) => setCart(prev => prev.filter(i => i.id !== id));
+  const updateQty = (id, delta) => {
+    setCart(prev => prev.map(i => i.id === id ? { ...i, qty: Math.max(1, i.qty + delta) } : i));
+  };
+
+  const toggleWishlist = (product) => {
+    setWishlist(prev => prev.find(i => i.id === product.id)
+      ? prev.filter(i => i.id !== product.id)
+      : [...prev, product]);
+  };
+
+  const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+  const cartTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+
+  const filtered = PRODUCTS
+    .filter(p => category === "All" || p.category === category)
+    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.category.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (sortBy === "price-asc") return a.price - b.price;
+      if (sortBy === "price-desc") return b.price - a.price;
+      if (sortBy === "rating") return b.rating - a.rating;
+      if (sortBy === "reviews") return b.reviews - a.reviews;
+      return 0;
+    });
+
+  const sendAiMessage = async () => {
+    if (!aiInput.trim() || aiLoading) return;
+    const userMsg = aiInput.trim();
+    setAiInput("");
+    setAiMessages(prev => [...prev, { role: "user", text: userMsg }]);
+    setAiLoading(true);
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          system: `You are ShopNest's AI shopping assistant — knowledgeable, friendly, and concise. Available products: ${PRODUCTS.map(p => `${p.name} ($${p.price}, ${p.category}, rated ${p.rating}/5)`).join("; ")}. Help users find products, compare options, suggest gifts, and answer shopping questions. Keep replies brief (2-4 sentences max). Don't use markdown formatting.`,
+          messages: [
+            ...aiMessages.filter(m => m.role !== "system").map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.text })),
+            { role: "user", content: userMsg }
+          ]
+        })
+      });
+      const data = await res.json();
+      const reply = data.content?.[0]?.text || "Sorry, I couldn't respond right now.";
+      setAiMessages(prev => [...prev, { role: "assistant", text: reply }]);
+    } catch {
+      setAiMessages(prev => [...prev, { role: "assistant", text: "Hmm, something went wrong. Please try again!" }]);
+    }
+    setAiLoading(false);
+  };
+
+  const placeOrder = () => {
+    setOrderPlaced(true);
+    setCart([]);
+    setTimeout(() => { setOrderPlaced(false); setPage("profile"); setProfileTab("orders"); setCheckoutStep(1); }, 2500);
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: COLORS.bg, color: COLORS.text }}>
+      <style>{css}</style>
+
+      {/* Navbar */}
+      <nav style={{ background: "rgba(15,15,26,0.95)", backdropFilter: "blur(20px)", borderBottom: `1px solid ${COLORS.border}`, position: "sticky", top: 0, zIndex: 100, padding: "0 32px" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", height: 64, gap: 32 }}>
+          <div className="syne" style={{ fontSize: 22, fontWeight: 800, cursor: "pointer", letterSpacing: "-0.5px" }} onClick={() => setPage("shop")}>
+            Shop<span style={{ color: COLORS.accent }}>Nest</span>
+          </div>
+          <div style={{ display: "flex", gap: 4, flex: 1 }}>
+            {["shop","ai","profile"].map(p => (
+              <button key={p} className="tab" style={{ textTransform: "capitalize", fontWeight: page === p ? 500 : 400 }}
+                onClick={() => setPage(p)}>{p === "ai" ? "AI Assistant" : p === "profile" ? "My Account" : "Shop"}</button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <button onClick={() => setPage("wishlist")} className="btn-ghost" style={{ padding: "8px 14px", position: "relative" }}>
+              ♡ {wishlist.length > 0 && <span style={{ position: "absolute", top: 2, right: 2, background: COLORS.accent, color: "#fff", borderRadius: "50%", width: 16, height: 16, fontSize: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>{wishlist.length}</span>}
+            </button>
+            <button onClick={() => setPage("cart")} className="btn-accent" style={{ position: "relative" }}>
+              🛒 Cart {cartCount > 0 && <span style={{ background: "rgba(255,255,255,0.25)", borderRadius: 20, padding: "2px 7px", marginLeft: 6, fontSize: 12 }}>{cartCount}</span>}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "32px 32px" }}>
+
+        {/* SHOP PAGE */}
+        {page === "shop" && !selectedProduct && (
+          <div>
+            {/* Hero */}
+            <div style={{ background: "linear-gradient(135deg, #1A1A2E 0%, #16213E 50%, #0F3460 100%)", borderRadius: 24, padding: "48px 40px", marginBottom: 40, position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: -40, right: -40, width: 300, height: 300, background: "radial-gradient(circle, rgba(233,69,96,0.15) 0%, transparent 70%)", borderRadius: "50%" }} />
+              <div style={{ position: "absolute", bottom: -60, left: 200, width: 200, height: 200, background: "radial-gradient(circle, rgba(22,199,154,0.1) 0%, transparent 70%)", borderRadius: "50%" }} />
+              <div className="syne" style={{ fontSize: 13, color: COLORS.teal, letterSpacing: 3, textTransform: "uppercase", marginBottom: 16 }}>Summer Collection 2026</div>
+              <h1 className="syne" style={{ fontSize: 48, fontWeight: 800, lineHeight: 1.1, marginBottom: 16 }}>
+                Discover Products<br /><span style={{ color: COLORS.accent }}>You'll Love.</span>
+              </h1>
+              <p style={{ color: COLORS.muted, fontSize: 16, maxWidth: 420, lineHeight: 1.7, marginBottom: 28 }}>
+                Curated picks across electronics, fashion, fitness, and more — with AI-powered recommendations just for you.
+              </p>
+              <div style={{ display: "flex", gap: 12 }}>
+                <button className="btn-accent" style={{ fontSize: 15, padding: "12px 28px" }} onClick={() => setCategory("All")}>Shop Now</button>
+                <button className="btn-ghost" onClick={() => setPage("ai")} style={{ fontSize: 15, padding: "12px 28px" }}>Ask AI Assistant</button>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20, alignItems: "center" }}>
+              <input placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)}
+                style={{ width: 240, flexShrink: 0 }} />
+              <div style={{ display: "flex", gap: 8, flex: 1, flexWrap: "wrap" }}>
+                {CATEGORIES.map(c => (
+                  <button key={c} className={`chip ${category === c ? "active" : ""}`} onClick={() => setCategory(c)}>{c}</button>
+                ))}
+              </div>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ width: 160 }}>
+                <option value="featured">Featured</option>
+                <option value="price-asc">Price: Low → High</option>
+                <option value="price-desc">Price: High → Low</option>
+                <option value="rating">Top Rated</option>
+                <option value="reviews">Most Reviewed</option>
+              </select>
+            </div>
+
+            <div style={{ color: COLORS.muted, fontSize: 13, marginBottom: 20 }}>{filtered.length} products found</div>
+
+            {/* Product Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 20 }}>
+              {filtered.map(p => (
+                <div key={p.id} className="card" style={{ padding: 0, overflow: "hidden", cursor: "pointer" }}>
+                  <div onClick={() => setSelectedProduct(p)}>
+                    <div style={{ background: "rgba(255,255,255,0.03)", padding: "32px 20px", textAlign: "center", fontSize: 64, position: "relative" }}>
+                      {p.image}
+                      {p.badge && <span className={`badge ${getBadgeClass(p.badge)}`} style={{ position: "absolute", top: 12, left: 12 }}>{p.badge}</span>}
+                      <button onClick={e => { e.stopPropagation(); toggleWishlist(p); }} style={{ position: "absolute", top: 12, right: 12, background: "transparent", border: "none", fontSize: 20, cursor: "pointer", color: wishlist.find(i => i.id === p.id) ? COLORS.accent : COLORS.muted, transition: "color 0.2s" }}>
+                        {wishlist.find(i => i.id === p.id) ? "♥" : "♡"}
+                      </button>
+                    </div>
+                    <div style={{ padding: "16px 16px 12px" }}>
+                      <div style={{ fontSize: 11, color: COLORS.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{p.category}</div>
+                      <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 8, lineHeight: 1.4 }}>{p.name}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                        <Stars rating={p.rating} />
+                        <span style={{ fontSize: 12, color: COLORS.muted }}>{p.rating} ({p.reviews.toLocaleString()})</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: COLORS.text }}>${p.price}</div>
+                        {p.stock < 15 && <span style={{ fontSize: 11, color: COLORS.gold }}>Only {p.stock} left</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ padding: "0 16px 16px" }}>
+                    <button className="btn-accent" style={{ width: "100%", padding: "10px" }} onClick={() => addToCart(p)}>Add to Cart</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* PRODUCT DETAIL */}
+        {page === "shop" && selectedProduct && (
+          <div>
+            <button className="btn-ghost" onClick={() => setSelectedProduct(null)} style={{ marginBottom: 24, fontSize: 13 }}>← Back to shop</button>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40 }}>
+              <div className="card" style={{ padding: 48, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 128 }}>
+                {selectedProduct.image}
+              </div>
+              <div>
+                <div style={{ fontSize: 12, color: COLORS.muted, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>{selectedProduct.category}</div>
+                {selectedProduct.badge && <span className={`badge ${getBadgeClass(selectedProduct.badge)}`} style={{ marginBottom: 12, display: "inline-block" }}>{selectedProduct.badge}</span>}
+                <h2 className="syne" style={{ fontSize: 32, fontWeight: 700, lineHeight: 1.2, marginBottom: 16 }}>{selectedProduct.name}</h2>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+                  <Stars rating={selectedProduct.rating} />
+                  <span style={{ color: COLORS.muted, fontSize: 14 }}>{selectedProduct.rating} out of 5 · {selectedProduct.reviews.toLocaleString()} reviews</span>
+                </div>
+                <div style={{ fontSize: 36, fontWeight: 800, marginBottom: 24, color: COLORS.accent }}>${selectedProduct.price}</div>
+                <div className="card" style={{ padding: 16, marginBottom: 24 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, textAlign: "center" }}>
+                    {[["🚚", "Free Shipping", "Over $50"], ["↩️", "30-Day Returns", "No questions"], ["🛡️", "2-Year Warranty", "Included"]].map(([icon, title, sub]) => (
+                      <div key={title}>
+                        <div style={{ fontSize: 22, marginBottom: 4 }}>{icon}</div>
+                        <div style={{ fontSize: 13, fontWeight: 500 }}>{title}</div>
+                        <div style={{ fontSize: 11, color: COLORS.muted }}>{sub}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <button className="btn-accent" style={{ flex: 1, fontSize: 15, padding: "14px" }} onClick={() => { addToCart(selectedProduct); }}>Add to Cart</button>
+                  <button className="btn-ghost" style={{ padding: "14px 18px", fontSize: 18 }} onClick={() => toggleWishlist(selectedProduct)}>
+                    {wishlist.find(i => i.id === selectedProduct.id) ? "♥" : "♡"}
+                  </button>
+                </div>
+                <div style={{ marginTop: 16, fontSize: 13, color: selectedProduct.stock < 15 ? COLORS.gold : COLORS.teal }}>
+                  {selectedProduct.stock < 15 ? `⚡ Only ${selectedProduct.stock} in stock — order soon` : `✓ In stock (${selectedProduct.stock} units)`}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CART PAGE */}
+        {page === "cart" && !orderPlaced && (
+          <div>
+            <h2 className="syne" style={{ fontSize: 28, fontWeight: 700, marginBottom: 28 }}>Your Cart</h2>
+            {cart.length === 0 ? (
+              <div className="card" style={{ padding: 64, textAlign: "center" }}>
+                <div style={{ fontSize: 64, marginBottom: 16 }}>🛒</div>
+                <p style={{ color: COLORS.muted, marginBottom: 24 }}>Your cart is empty</p>
+                <button className="btn-accent" onClick={() => setPage("shop")}>Start Shopping</button>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 24 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {/* Checkout Steps */}
+                  <div className="card" style={{ padding: "16px 24px", marginBottom: 8 }}>
+                    <div style={{ display: "flex", gap: 0 }}>
+                      {["Cart", "Shipping", "Payment"].map((step, i) => (
+                        <div key={step} style={{ display: "flex", alignItems: "center", flex: i < 2 ? 1 : 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: i + 1 <= checkoutStep ? "pointer" : "default" }}
+                            onClick={() => i + 1 <= checkoutStep && setCheckoutStep(i + 1)}>
+                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: i + 1 <= checkoutStep ? COLORS.accent : "rgba(255,255,255,0.06)", color: i + 1 <= checkoutStep ? "#fff" : COLORS.muted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600 }}>
+                              {i + 1 < checkoutStep ? "✓" : i + 1}
+                            </div>
+                            <span style={{ fontSize: 13, color: i + 1 === checkoutStep ? COLORS.text : COLORS.muted, fontWeight: i + 1 === checkoutStep ? 500 : 400 }}>{step}</span>
+                          </div>
+                          {i < 2 && <div style={{ flex: 1, height: 1, background: i + 1 < checkoutStep ? COLORS.accent : "rgba(255,255,255,0.08)", margin: "0 12px" }} />}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {checkoutStep === 1 && cart.map(item => (
+                    <div key={item.id} className="card" style={{ padding: "16px 20px", display: "flex", gap: 16, alignItems: "center" }}>
+                      <div style={{ fontSize: 40, width: 64, height: 64, background: "rgba(255,255,255,0.04)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>{item.image}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 4 }}>{item.name}</div>
+                        <div style={{ fontSize: 13, color: COLORS.muted }}>${item.price} each</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <button className="qty-btn" onClick={() => updateQty(item.id, -1)}>−</button>
+                        <span style={{ width: 24, textAlign: "center", fontWeight: 500 }}>{item.qty}</span>
+                        <button className="qty-btn" onClick={() => updateQty(item.id, 1)}>+</button>
+                      </div>
+                      <div style={{ width: 64, textAlign: "right", fontWeight: 600 }}>${item.price * item.qty}</div>
+                      <button onClick={() => removeFromCart(item.id)} style={{ background: "transparent", border: "none", color: COLORS.muted, cursor: "pointer", fontSize: 18 }}>×</button>
+                    </div>
+                  ))}
+
+                  {checkoutStep === 2 && (
+                    <div className="card" style={{ padding: 28 }}>
+                      <h3 className="syne" style={{ fontSize: 18, marginBottom: 20 }}>Shipping Information</h3>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                        {[["First Name","John"],["Last Name","Doe"],["Email","john.doe@email.com"],["Phone","+1 555-0100"],["Address","123 Main Street"],["City","New York"],["State","NY"],["ZIP","10001"]].map(([label, val]) => (
+                          <div key={label}>
+                            <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 6 }}>{label}</div>
+                            <input defaultValue={val} style={{ width: "100%" }} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {checkoutStep === 3 && (
+                    <div className="card" style={{ padding: 28 }}>
+                      <h3 className="syne" style={{ fontSize: 18, marginBottom: 20 }}>Payment Details</h3>
+                      <div style={{ display: "grid", gap: 14 }}>
+                        <div>
+                          <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 6 }}>Card Number</div>
+                          <input defaultValue="4242 4242 4242 4242" style={{ width: "100%" }} />
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+                          {[["Expiry","12/28"],["CVV","•••"],["Name on Card","John Doe"]].map(([label, val]) => (
+                            <div key={label}>
+                              <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 6 }}>{label}</div>
+                              <input defaultValue={val} />
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ background: "rgba(22,199,154,0.08)", border: "1px solid rgba(22,199,154,0.2)", borderRadius: 10, padding: 12, fontSize: 13, color: "#16C79A" }}>
+                          🔒 Your payment information is encrypted and secure
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    {checkoutStep > 1 && <button className="btn-ghost" onClick={() => setCheckoutStep(s => s - 1)}>← Back</button>}
+                    <div style={{ marginLeft: "auto" }}>
+                      {checkoutStep < 3
+                        ? <button className="btn-accent" style={{ fontSize: 15, padding: "12px 28px" }} onClick={() => setCheckoutStep(s => s + 1)}>Continue →</button>
+                        : <button className="btn-accent" style={{ fontSize: 15, padding: "12px 28px" }} onClick={placeOrder}>Place Order 🎉</button>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Summary */}
+                <div>
+                  <div className="card" style={{ padding: 24, position: "sticky", top: 80 }}>
+                    <h3 className="syne" style={{ fontSize: 18, marginBottom: 20 }}>Order Summary</h3>
+                    {cart.map(item => (
+                      <div key={item.id} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 13 }}>
+                        <span style={{ color: COLORS.muted }}>{item.name} × {item.qty}</span>
+                        <span>${item.price * item.qty}</span>
+                      </div>
+                    ))}
+                    <div style={{ borderTop: `1px solid ${COLORS.border}`, margin: "16px 0", paddingTop: 16 }}>
+                      {[["Subtotal", `$${cartTotal}`],["Shipping", cartTotal > 50 ? "Free" : "$9.99"],["Tax (8%)", `$${Math.round(cartTotal * 0.08)}`]].map(([label, val]) => (
+                        <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 14 }}>
+                          <span style={{ color: COLORS.muted }}>{label}</span>
+                          <span style={{ color: val === "Free" ? COLORS.teal : COLORS.text }}>{val}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 18, fontWeight: 700, marginBottom: 16 }}>
+                      <span>Total</span>
+                      <span style={{ color: COLORS.accent }}>${cartTotal + Math.round(cartTotal * 0.08) + (cartTotal > 50 ? 0 : 9.99)}</span>
+                    </div>
+                    <div style={{ background: "rgba(245,166,35,0.08)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: 8, padding: 10, fontSize: 12, color: COLORS.gold }}>
+                      🎁 You save $24 with current promotions
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {orderPlaced && (
+          <div style={{ textAlign: "center", padding: "80px 20px" }}>
+            <div style={{ fontSize: 80, marginBottom: 24 }}>🎉</div>
+            <h2 className="syne" style={{ fontSize: 32, marginBottom: 12 }}>Order Placed!</h2>
+            <p style={{ color: COLORS.muted }}>Redirecting to your account...</p>
+          </div>
+        )}
+
+        {/* WISHLIST PAGE */}
+        {page === "wishlist" && (
+          <div>
+            <h2 className="syne" style={{ fontSize: 28, fontWeight: 700, marginBottom: 28 }}>Wishlist ({wishlist.length})</h2>
+            {wishlist.length === 0 ? (
+              <div className="card" style={{ padding: 64, textAlign: "center" }}>
+                <div style={{ fontSize: 64, marginBottom: 16 }}>♡</div>
+                <p style={{ color: COLORS.muted, marginBottom: 24 }}>Your wishlist is empty</p>
+                <button className="btn-accent" onClick={() => setPage("shop")}>Browse Products</button>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 20 }}>
+                {wishlist.map(p => (
+                  <div key={p.id} className="card" style={{ padding: 20 }}>
+                    <div style={{ fontSize: 56, textAlign: "center", marginBottom: 12 }}>{p.image}</div>
+                    <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 8 }}>{p.name}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <span style={{ fontSize: 18, fontWeight: 700 }}>${p.price}</span>
+                      <Stars rating={p.rating} />
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button className="btn-accent" style={{ flex: 1, padding: "9px" }} onClick={() => { addToCart(p); toggleWishlist(p); }}>Add to Cart</button>
+                      <button className="btn-ghost" style={{ padding: "9px 12px" }} onClick={() => toggleWishlist(p)}>×</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* AI ASSISTANT PAGE */}
+        {page === "ai" && (
+          <div style={{ maxWidth: 720, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <div style={{ fontSize: 48, marginBottom: 12 }}>🤖</div>
+              <h2 className="syne" style={{ fontSize: 28, fontWeight: 700 }}>AI Shopping Assistant</h2>
+              <p style={{ color: COLORS.muted, marginTop: 8 }}>Ask anything about products, get personalized recommendations, or get help finding the perfect gift.</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20, maxHeight: 480, overflowY: "auto", paddingRight: 4 }}>
+              {aiMessages.map((m, i) => (
+                <div key={i} style={{ display: "flex", gap: 10, justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+                  {m.role === "assistant" && <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(22,199,154,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>🤖</div>}
+                  <div className={m.role === "assistant" ? "ai-bubble" : "user-bubble"} style={{ maxWidth: "80%" }}>{m.text}</div>
+                  {m.role === "user" && <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(233,69,96,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>👤</div>}
+                </div>
+              ))}
+              {aiLoading && (
+                <div style={{ display: "flex", gap: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(22,199,154,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🤖</div>
+                  <div className="ai-bubble" style={{ display: "flex", alignItems: "center" }}><span className="spinner" />Thinking...</div>
+                </div>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <input value={aiInput} onChange={e => setAiInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && sendAiMessage()}
+                placeholder="Ask about products, get recommendations..." style={{ flex: 1 }} />
+              <button className="btn-accent" onClick={sendAiMessage} disabled={aiLoading} style={{ padding: "10px 20px" }}>Send</button>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+              {["Best electronics under $200", "Gift ideas for a fitness lover", "Compare headphones", "What's new this season"].map(q => (
+                <button key={q} className="chip" onClick={() => { setAiInput(q); }} style={{ fontSize: 12 }}>{q}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* PROFILE PAGE */}
+        {page === "profile" && (
+          <div>
+            {/* Profile Header */}
+            <div className="card" style={{ padding: 28, marginBottom: 24, display: "flex", gap: 20, alignItems: "center" }}>
+              <div style={{ width: 72, height: 72, borderRadius: "50%", background: "linear-gradient(135deg, #E94560, #F5A623)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 700 }}>J</div>
+              <div style={{ flex: 1 }}>
+                <h2 className="syne" style={{ fontSize: 22, fontWeight: 700 }}>John Doe</h2>
+                <p style={{ color: COLORS.muted, fontSize: 14 }}>john.doe@email.com · Member since Jan 2024</p>
+                <div style={{ display: "flex", gap: 20, marginTop: 12 }}>
+                  {[["12", "Orders"], ["3", "Wishlist"], ["4.9★", "Avg Rating"]].map(([val, label]) => (
+                    <div key={label}>
+                      <span style={{ fontWeight: 700, fontSize: 18 }}>{val}</span>
+                      <span style={{ color: COLORS.muted, fontSize: 12, marginLeft: 6 }}>{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button className="btn-ghost">Edit Profile</button>
+            </div>
+
+            <div style={{ borderBottom: `1px solid ${COLORS.border}`, marginBottom: 24 }}>
+              {["orders","addresses","settings"].map(t => (
+                <button key={t} className={`tab ${profileTab === t ? "active" : ""}`}
+                  onClick={() => setProfileTab(t)} style={{ textTransform: "capitalize" }}>{t}</button>
+              ))}
+            </div>
+
+            {profileTab === "orders" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {ORDERS.map(order => (
+                  <div key={order.id} className="card" style={{ padding: "20px 24px", display: "flex", alignItems: "center", gap: 20 }}>
+                    <div style={{ fontSize: 32 }}>📦</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 4 }}>
+                        <span style={{ fontWeight: 600 }}>{order.id}</span>
+                        <span className={`badge badge-${order.statusColor === "success" ? "teal" : "blue"}`}>{order.status}</span>
+                      </div>
+                      <div style={{ fontSize: 13, color: COLORS.muted }}>{order.date} · {order.items} items</div>
+                    </div>
+                    <div style={{ fontWeight: 700, fontSize: 18 }}>${order.total}</div>
+                    <button className="btn-ghost" style={{ fontSize: 13, padding: "8px 16px" }}>View</button>
+                  </div>
+                ))}
+                {orderPlaced === false && cart.length === 0 && (
+                  <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                    <button className="btn-accent" onClick={() => setPage("shop")}>Continue Shopping</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {profileTab === "addresses" && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                {[["🏠 Home", "123 Main Street, New York, NY 10001", true], ["🏢 Work", "456 Office Park, Manhattan, NY 10002", false]].map(([title, addr, isDefault]) => (
+                  <div key={title} className="card" style={{ padding: 20, borderColor: isDefault ? COLORS.accent : undefined }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                      <span style={{ fontWeight: 600 }}>{title}</span>
+                      {isDefault && <span className="badge badge-red">Default</span>}
+                    </div>
+                    <p style={{ fontSize: 14, color: COLORS.muted, lineHeight: 1.6 }}>{addr}</p>
+                    <button className="btn-ghost" style={{ marginTop: 14, fontSize: 12, padding: "6px 14px" }}>Edit</button>
+                  </div>
+                ))}
+                <div className="card" style={{ padding: 20, border: "1px dashed rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                  <span style={{ color: COLORS.muted, fontSize: 14 }}>+ Add New Address</span>
+                </div>
+              </div>
+            )}
+
+            {profileTab === "settings" && (
+              <div style={{ maxWidth: 480 }}>
+                {[["Email Notifications", "Order updates, promotions & news", true], ["Push Notifications", "Real-time order tracking", false], ["Two-Factor Auth", "Extra layer of security", true], ["Dark Mode", "Default setting", true]].map(([title, desc, enabled]) => (
+                  <div key={title} className="card" style={{ padding: 18, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontWeight: 500, marginBottom: 2 }}>{title}</div>
+                      <div style={{ fontSize: 12, color: COLORS.muted }}>{desc}</div>
+                    </div>
+                    <div style={{ width: 44, height: 24, borderRadius: 12, background: enabled ? COLORS.accent : "rgba(255,255,255,0.1)", position: "relative", cursor: "pointer", flexShrink: 0 }}>
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#fff", position: "absolute", top: 3, left: enabled ? 23 : 3, transition: "left 0.2s" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {toast && <div className="toast">✓ {toast}</div>}
+    </div>
+  );
+}
