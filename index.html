@@ -3,22 +3,118 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ShopNest</title>
-
-  <link rel="stylesheet" href="style.css">
-
-  <!-- React CDN -->
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-
-  <!-- Babel -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <title>ShopNest — Shop the Essentials</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
-  <div id="root"></div>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">Shop<span>Nest</span></div>
+      <div class="search-wrap">
+        <span class="si">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search products…" oninput="filterProducts()"/>
+      </div>
+      <nav class="nav-links">
+        <a>New In</a>
+        <a>Deals</a>
+        <a>About</a>
+      </nav>
+      <button class="login-btn" onclick="openLogin()">Login</button>
+      <button class="cart-btn" onclick="toggleCart()">
+        🛒 Cart <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </div>
+  </header>
 
-  <script type="text/babel" src="script.js"></script>
+  <!-- HERO -->
+  <section class="hero">
+    <h1>Shop the <em>Essentials</em><br/>You Actually Love</h1>
+    <p>Curated products across categories — quality you can count on, prices that make sense.</p>
+    <div class="hero-cta">
+      <button class="btn-primary" onclick="document.querySelector('.section').scrollIntoView({behavior:'smooth'})">Shop Now</button>
+      <button class="btn-outline" onclick="document.getElementById('aiQuery').focus()">Ask AI ✦</button>
+    </div>
+  </section>
+
+  <!-- AI ADVISOR -->
+  <div class="ai-bar">
+    <div class="ai-inner">
+      <span class="ai-label">✦ AI Advisor</span>
+      <input id="aiQuery" class="ai-input" placeholder="Ask me anything — 'What's good for a home office?' or 'Best gift under ₹2000'"/>
+      <button class="ai-ask" onclick="askAI()">Ask</button>
+    </div>
+  </div>
+  <div class="ai-result" id="aiResult" style="display:none">
+    <div class="ai-result-box" id="aiResultBox"></div>
+  </div>
+
+  <!-- CATEGORY FILTER -->
+  <div class="cats" id="cats"></div>
+
+  <!-- PRODUCT GRID -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title" id="sectionTitle">All Products</div>
+      <div class="section-sub" id="sectionSub">24 items</div>
+    </div>
+    <div class="grid" id="productGrid"></div>
+  </div>
+
+  <!-- CART DRAWER -->
+  <div class="overlay" id="overlay" onclick="toggleCart()"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawer-head">
+      <span class="drawer-title">Your Cart</span>
+      <button class="close-btn" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="drawer-body" id="cartBody"></div>
+    <div class="drawer-foot" id="cartFoot" style="display:none">
+      <div class="total-row"><span>Subtotal</span><span id="subtotal">₹0</span></div>
+      <div class="total-row"><span>Shipping</span><span>Free</span></div>
+      <div class="total-row big"><span>Total</span><span id="total">₹0</span></div>
+      <button class="checkout-btn" onclick="openCheckout()">Proceed to Checkout →</button>
+    </div>
+  </div>
+
+  <!-- CHECKOUT MODAL -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeCheckoutOutside(event)">
+    <div class="modal" id="checkoutModal">
+      <div id="checkoutContent"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">Shop<span>Nest</span></div>
+      <div class="footer-copy">&copy; 2026 ShopNest. All rights reserved. Designed &amp; developed by <strong>Pritam Som</strong>.</div>
+    </div>
+  </footer>
+
+  <!-- LOGIN MODAL -->
+  <div class="modal-overlay" id="loginOverlay" onclick="closeLoginOutside(event)">
+    <div class="modal login-modal" id="loginModal">
+      <div id="loginContent"></div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS (order matters) -->
+  <script src="products.js"></script>
+  <script src="cart.js"></script>
+  <script src="checkout.js"></script>
+  <script src="ai.js"></script>
+  <script src="login.js"></script>
+
+  <script>
+    // Boot the app
+    renderCats();
+    renderProducts();
+  </script>
 
 </body>
 </html>
